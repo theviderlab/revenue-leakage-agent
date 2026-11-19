@@ -1,0 +1,12 @@
+[
+    {
+      "memo_id": "CR-001",
+      "plan_id": "PLN-2001-A1",
+      "invoice_id": "INV-2001",
+      "amount": 5000,
+      "currency": "USD",
+      "issue_date": "2025-08-28",
+      "reason": "FX overbilling adjustment (EUR to USD)"
+    }
+  ]
+  

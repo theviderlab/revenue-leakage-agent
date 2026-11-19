@@ -1,0 +1,44 @@
+[
+    {
+      "plan_id": "PLN-1001",
+      "customer_name": "Alder Creek Logistics",
+      "total_value": 84000,
+      "currency": "USD",
+      "cadence": "Monthly",
+      "start_date": "2025-12-01",
+      "entitlements": ["Analytics", "Support"],
+      "notes": "12-month SaaS; 7,000 USD per month, billed in advance"
+    },
+    {
+      "plan_id": "PLN-2001",
+      "customer_name": "Vertex Dynamics",
+      "total_value": 84000,
+      "currency": "USD",
+      "cadence": "Quarterly",
+      "start_date": "2025-05-15",
+      "entitlements": ["Analytics", "Premium Support"],
+      "notes": "Quarterly target 21,000 USD; superseded by PLN-2001-A1 from 2025-07-01 (see amendment)"
+    },
+    {
+      "plan_id": "PLN-2001-A1",
+      "customer_name": "Vertex Dynamics",
+      "total_value": 112000,
+      "currency": "USD",
+      "cadence": "Quarterly",
+      "start_date": "2025-07-01",
+      "amends": "PLN-2001",
+      "entitlements": ["Analytics", "Premium Support"],
+      "notes": "Amendment effective 2025-07-01. Quarterly target now 28,000 USD"
+    },
+    {
+      "plan_id": "PLN-3001",
+      "customer_name": "Lumen Health",
+      "total_value": 120000,
+      "currency": "USD",
+      "cadence": "Annual",
+      "start_date": "2025-07-15",
+      "entitlements": ["Analytics", "Consulting"],
+      "notes": "Enterprise annual; 120,000 USD for 12 months from 2025-07-15"
+    }
+  ]
+  

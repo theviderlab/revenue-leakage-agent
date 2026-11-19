@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(make:*)",
+      "Bash(uv:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(curl:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__chrome-devtools"
+    ]
+  }
+}
