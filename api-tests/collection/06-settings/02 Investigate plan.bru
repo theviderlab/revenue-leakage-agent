@@ -1,0 +1,23 @@
+meta {
+  name: Investigate plan
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Check plan PLN-1001"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.findings[0].stale: eq false
+  res.body.state.findings[0].settings_version: eq {{version}}
+}

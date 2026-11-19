@@ -1,0 +1,19 @@
+meta {
+  name: Create thread
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/threads
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+vars:post-response {
+  threadId: res.body.thread_id
+}

@@ -1,0 +1,30 @@
+meta {
+  name: Ask to apply
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "apply"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: neq null
+}
+
+script:post-response {
+  const card = res.body.events.find((e) => e.type === "approval_request");
+  if (card) {
+    bru.setVar("interruptId", card.interrupt_id);
+    bru.setVar("toolCallId", card.tool_call_id);
+  }
+}

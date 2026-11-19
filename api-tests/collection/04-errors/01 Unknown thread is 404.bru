@@ -1,0 +1,20 @@
+meta {
+  name: Unknown thread is 404
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/threads/does-not-exist
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+  res.body.detail: isString
+}
+
+docs {
+  The frontend creates a new thread on this 404 (D18).
+}

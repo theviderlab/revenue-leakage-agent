@@ -1,0 +1,23 @@
+meta {
+  name: Reject the card
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "reject"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}

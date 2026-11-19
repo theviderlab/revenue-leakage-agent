@@ -1,0 +1,28 @@
+meta {
+  name: Rejected proposal cannot be applied
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "apply"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}
+
+tests {
+  test("no card is raised for a rejected proposal", function () {
+    expect(res.body.events.map((e) => e.type)).to.not.include("approval_request");
+  });
+}

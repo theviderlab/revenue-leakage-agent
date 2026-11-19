@@ -17,8 +17,9 @@ Related documents:
 | Backend | FastAPI, Python 3.12 with uv, ruff, pytest |
 | Frontend | Vite + React + TypeScript, Tailwind v4, Vitest, Playwright (one e2e test, D39) |
 | Agent | LangGraph, OpenAI-compatible LLM through `get_llm()` (see [agent.md](agent.md)) |
+| API tests | Bruno collection in `api-tests/`, run with the Bruno CLI (D40) |
 | Commands | Makefile (GNU make) |
-| CI | GitHub Actions: `check` job (`make install` + `make check`) and `e2e` job (`make e2e`, D39) |
+| CI | GitHub Actions: `check` job (`make install` + `make check`), `e2e` job (`make e2e`, D39) and `api-test` job (`make api-test`, D40) |
 
 ---
 
@@ -518,6 +519,21 @@ Rejected:
 - **Inside `make check`**: it needs a browser download (about 300 MB) and two servers, which slows the local loop for every change.
 - **Against a production build (`vite preview`)**: the dev server is what the proxy config and `make dev` use; a build step adds time and tests nothing extra here.
 
+### D40. Black-box API tests: a Bruno collection against the mock, in its own CI job
+
+A Bruno collection (`api-tests/collection/`, plain-text `.bru` files in git) tests the HTTP API from the outside, as a client would. It runs in order: catalog (health, plans, settings, graph), the approval flow chained through variables (thread, proposal, `interrupt_id`, `tool_call_id`, `action_id`: investigate, propose, apply, 409s while the card is pending, approve, replay 409, global audit log, rollback, reload), rejection, error codes (404, 409, 422, agent failure as an `error` event, invalid proposal as an `error` tool result), the rollback guard (D8) and settings (version bump, stale findings, no bump without a real change, 422, 409 while any card is pending). Each request has `assert` lines for status and fields plus chai `tests` for the structure, and a `docs` block that names the `D#` it checks. `api-tests/run.mjs` starts its own mock backend (`AGENT_BACKEND=mock`, `STATE_DIR` in the OS temp dir, port 8200), runs `bru run` with the `ci` environment, writes JUnit and HTML reports to `api-tests/reports/` and stops the server. It runs with `make api-test` and in a separate `api-test` CI job that always uploads the HTML report; it is not part of `make check`. The `local` environment points at `make dev AGENT_BACKEND=mock` (port 8000) for exploring in the Bruno app.
+
+Why: the repo is a portfolio piece, and this shows a test layer the others do not: pytest (`test_api_contract.py`) calls the app in process through `TestClient`; Bruno goes through uvicorn and real HTTP (serialization, status codes, headers) and reads like a QA suite anyone can open and run. The mock is deterministic and uses the ground-truth numbers, as in D39. IDs that depend on the server's history (`INV-MG-NNN`, the settings `version`) are captured and compared, never hard-coded, and every flow that applies an action rolls it back, so the collection also passes against a server that is not fresh. Overlap with pytest is accepted: the two layers check the same contract from different sides.
+
+Rejected:
+
+- **Postman**: collections are large JSON exports, the CLI (Newman) and the app push toward a cloud account; Bruno keeps one readable file per request in git and runs offline.
+- **Hurl or plain `curl` scripts**: less readable as a suite, no app to explore the collection, and weaker chaining and structured assertions.
+- **Schemathesis (property-based tests from the OpenAPI)**: finds different bugs (500s, schema drift) but does not show the flows; it can be added later, it does not replace this.
+- **Against the real LLM**: not deterministic, costs money and needs a secret in CI (same reason as D39).
+- **Inside `make check`**: it needs a running server; `check` stays in process and fast.
+- **Bruno CLI as a frontend devDependency**: the tests are of the API, not of the SPA; `api-tests/` has its own `package.json`, installed by `make install`.
+
 ---
 
 ## Detector ground truth
@@ -604,6 +620,15 @@ Implementation details with no real alternative, which is why they are not `D#`:
 
 - The mock returns the amounts of the detector table (ground truth, Base), so the UI is tested with the same numbers as the real backend.
 - Mock and real implement the same interface and return the same models from `schemas.py`: the routes do not know which one runs.
+- The mock used to bump the settings `version` on any `PUT` with a field present, even with the same value; the real backend only on a real change (D36). The Bruno collection (D40) caught it; the mock now compares old and new values.
+
+### API tests (Bruno)
+
+- Assertion operators: there is no `isNotNull`, and `isTruthy` is a strict `=== true` (an object fails it). For "not null" use `neq null`.
+- `script:post-response` and `vars:post-response` run before `tests`: a test that compares with the previous value of a variable the script overwrites sees the new one. Overwrite it at the end of the `tests` block instead.
+- `bru run -r` runs folders and requests by their `seq` (`folder.bru` for folders); the file names carry the same number only for reading.
+- `uv run` starts uvicorn as a child process: stopping the server means killing the tree (`taskkill /T` on Windows, a detached process group and `kill(-pid)` elsewhere), or uvicorn keeps the port.
+- The collection lives in `api-tests/collection/`, not next to `package.json`: `bru` scans the collection folder for `.bru` files and should not walk `node_modules`.
 
 ### Domain
 

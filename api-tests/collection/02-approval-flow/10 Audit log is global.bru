@@ -1,0 +1,30 @@
+meta {
+  name: Audit log is global
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/threads
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("a brand-new thread sees the action applied in another thread", function () {
+    const ids = res.body.state.actions.map((a) => a.action_id);
+    expect(ids).to.include(bru.getVar("actionId"));
+  });
+
+  test("exactly one action was written by the approval and none by the replay", function () {
+    expect(res.body.state.actions).to.have.length(bru.getVar("actionsBefore") + 1);
+  });
+}
+
+docs {
+  The sandbox and its audit log are global, not per thread (D5, D25).
+}

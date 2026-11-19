@@ -1,0 +1,33 @@
+meta {
+  name: Restore the default
+  type: http
+  seq: 13
+}
+
+put {
+  url: {{baseUrl}}/api/settings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "period_calendar": null
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("null goes back to the default and bumps the version", function () {
+    const body = res.getBody();
+    expect(body.version).to.equal(bru.getVar("version") + 1);
+    body.settings.forEach((s) => expect(s.value, s.key).to.equal(null));
+  });
+}
+
+docs {
+  With the card decided, the change goes through. An explicit `null` restores the default.
+}

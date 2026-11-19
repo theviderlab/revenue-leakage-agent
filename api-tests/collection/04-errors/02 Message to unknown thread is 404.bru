@@ -1,0 +1,21 @@
+meta {
+  name: Message to unknown thread is 404
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/threads/does-not-exist/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "hi"
+  }
+}
+
+assert {
+  res.status: eq 404
+}

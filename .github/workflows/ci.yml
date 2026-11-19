@@ -36,3 +36,20 @@ jobs:
             frontend/playwright-report/
             frontend/test-results/
           retention-days: 7
+
+  api-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: make install
+      - run: make api-test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-test-report
+          path: api-tests/reports/
+          retention-days: 14

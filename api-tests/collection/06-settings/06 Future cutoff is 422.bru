@@ -1,0 +1,25 @@
+meta {
+  name: Future cutoff is 422
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/settings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "as_of": "2999-01-01"
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+docs {
+  `as_of` later than today is rejected (D21).
+}

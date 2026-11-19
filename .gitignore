@@ -4,6 +4,7 @@ __pycache__/
 .ruff_cache/
 node_modules/
 dist/
+api-tests/reports/
 .env
 # Runtime state, reset together before the demo (D17, D18)
 sandbox/

@@ -1,0 +1,38 @@
+meta {
+  name: List plans
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/plans
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+  res.body.length: eq 4
+}
+
+tests {
+  const plans = res.getBody();
+
+  test("returns the four plans of data/, amendment included", function () {
+    expect(plans.map((p) => p.plan_id)).to.eql(["PLN-1001", "PLN-2001", "PLN-2001-A1", "PLN-3001"]);
+  });
+
+  test("nothing comes from the sandbox on a fresh server", function () {
+    expect(plans.every((p) => p.source === "data")).to.equal(true);
+  });
+
+  test("the amendment points to the plan it replaces", function () {
+    const amendment = plans.find((p) => p.plan_id === "PLN-2001-A1");
+    expect(amendment.amends).to.equal("PLN-2001");
+  });
+}
+
+docs {
+  `GET /api/plans` (D6, D12): the plans of `data/` plus the sandbox overlay.
+}

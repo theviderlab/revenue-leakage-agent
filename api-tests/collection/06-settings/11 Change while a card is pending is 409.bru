@@ -1,0 +1,26 @@
+meta {
+  name: Change while a card is pending is 409
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/api/settings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "period_calendar": null
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+docs {
+  Changing the assumptions under a card the user is about to approve would approve something
+  computed with other rules: any pending card in any thread blocks the change.
+}

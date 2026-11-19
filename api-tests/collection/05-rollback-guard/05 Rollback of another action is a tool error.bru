@@ -1,0 +1,37 @@
+meta {
+  name: Rollback of another action is a tool error
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Roll back INV-MG-999"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}
+
+tests {
+  const events = res.getBody().events;
+
+  test("the rollback tool answers with an error that names the last active action", function () {
+    const result = events.find((e) => e.type === "tool_result");
+    expect(result.name).to.equal("rollback");
+    expect(result.status).to.equal("error");
+    expect(result.result.error).to.include(bru.getVar("actionId"));
+  });
+
+  test("no card is raised", function () {
+    expect(events.map((e) => e.type)).to.not.include("approval_request");
+  });
+}

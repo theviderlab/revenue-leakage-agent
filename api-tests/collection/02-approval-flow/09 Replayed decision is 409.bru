@@ -1,0 +1,26 @@
+meta {
+  name: Replayed decision is 409
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+docs {
+  The same card cannot be approved twice: a double click or a retried request writes once.
+}

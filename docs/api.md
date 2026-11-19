@@ -1,6 +1,6 @@
 # API
 
-The API contract. The models live in `backend/app/schemas.py`; the frontend types are generated with `make types` into `frontend/src/lib/api-types.ts` and are never written by hand. The decisions are in [design.md](design.md) (D9, D10, D14, D24, D25, D28, D34).
+The API contract. The models live in `backend/app/schemas.py`; the black-box tests of this contract are the Bruno collection in `api-tests/` (D40); the frontend types are generated with `make types` into `frontend/src/lib/api-types.ts` and are never written by hand. The decisions are in [design.md](design.md) (D9, D10, D14, D24, D25, D28, D34).
 
 `AGENT_BACKEND` (`mock` / `real`, in `app/config.py`) picks the implementation of the `AgentService` interface (`app/service.py`); the routes do not know which one runs. `mock` is in `app/mock.py`; `real` is `RealAgentService` (`app/agent/service.py`, `create_service()`, one singleton per process).
 
@@ -88,4 +88,4 @@ A keyword script, with no LLM and no detector, using the amounts of `PLN-1001` (
 | `error`, `fail` | `error` event with 200 |
 | anything else | help with the script |
 
-Applying creates `INV-MG-001`, `INV-MG-002`, ... (sequential, never reused); the recompute shows 2026-02 as `ok` and the total at +1,500 (May is still `overbilled`), and the rollback brings it back to -5,500. `GET /api/plans` returns the four plans of `data/`; `GET /api/settings` starts with every setting unset and `PUT` changes them in memory. The mock's state lives in memory and is lost on restart.
+Applying creates `INV-MG-001`, `INV-MG-002`, ... (sequential, never reused); the recompute shows 2026-02 as `ok` and the total at +1,500 (May is still `overbilled`), and the rollback brings it back to -5,500. `GET /api/plans` returns the four plans of `data/`; `GET /api/settings` starts with every setting unset and `PUT` changes them in memory (like the real backend, a `PUT` with no real change does not bump `version`). The mock's state lives in memory and is lost on restart.

@@ -1,0 +1,27 @@
+meta {
+  name: Same value does not bump version
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/settings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "period_calendar": "calendar"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.version: eq {{version}}
+}
+
+docs {
+  A `PUT` with no real change leaves `version` alone (D36), so findings do not go stale for
+  nothing.
+}

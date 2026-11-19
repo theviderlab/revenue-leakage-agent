@@ -1,0 +1,48 @@
+meta {
+  name: Approve rollback
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}
+
+tests {
+  const { events, state } = res.getBody();
+
+  test("the rollback result pairs with its call", function () {
+    const result = events.find((e) => e.type === "tool_result" && e.name === "rollback");
+    expect(result.tool_call_id).to.equal(bru.getVar("toolCallId"));
+    expect(result.status).to.equal("ok");
+  });
+
+  test("the action is marked rolled back, never deleted", function () {
+    expect(state.actions).to.have.length(bru.getVar("actionsBefore") + 1);
+    const action = state.actions.find((a) => a.action_id === bru.getVar("actionId"));
+    expect(action.rolled_back_at).to.be.a("string");
+  });
+
+  test("the recompute brings the gap back to -5,500", function () {
+    const plan = events.find((e) => e.type === "findings").findings.plans[0];
+    expect(plan.totals.diff).to.equal(-5500);
+  });
+}
+
+docs {
+  The sandbox is append-only: a rollback sets `rolled_back_at` (D5).
+}

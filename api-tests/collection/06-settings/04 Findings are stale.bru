@@ -1,0 +1,22 @@
+meta {
+  name: Findings are stale
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/threads/{{threadId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.settings_version: eq {{version}}
+  res.body.state.findings[0].stale: eq true
+}
+
+docs {
+  Findings computed with an older settings version are flagged `stale`, so the UI can ask for
+  a re-check instead of showing numbers that no longer hold.
+}

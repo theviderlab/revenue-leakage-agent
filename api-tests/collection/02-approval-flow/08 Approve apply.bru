@@ -1,0 +1,66 @@
+meta {
+  name: Approve apply
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}
+
+script:post-response {
+  const result = res.body.events.find((e) => e.type === "tool_result" && e.name === "apply");
+  if (result && result.result) bru.setVar("actionId", result.result.action_id);
+}
+
+tests {
+  const { events, state } = res.getBody();
+  const result = events.find((e) => e.type === "tool_result" && e.name === "apply");
+
+  test("the result of the original apply call arrives with the decision", function () {
+    expect(result.tool_call_id).to.equal(bru.getVar("toolCallId"));
+    expect(result.status).to.equal("ok");
+    expect(result.result.action_id).to.match(/^INV-MG-\d{3}$/);
+  });
+
+  test("the audit log gains exactly that action, active", function () {
+    expect(state.actions).to.have.length(bru.getVar("actionsBefore") + 1);
+    const action = state.actions[state.actions.length - 1];
+    expect(action.action_id).to.equal(result.result.action_id);
+    expect(action.type).to.equal("make_good_invoice");
+    expect(action.proposal_id).to.equal(bru.getVar("proposalId"));
+    expect(action.thread_id).to.equal(bru.getVar("threadId"));
+    expect(action.rolled_back_at).to.equal(null);
+  });
+
+  test("the proposal is now applied", function () {
+    expect(state.proposals[0].status).to.equal("applied");
+  });
+
+  test("the plan is recomputed: February ok, total +1,500 (May still overbilled)", function () {
+    const plan = events.find((e) => e.type === "findings").findings.plans[0];
+    const status = Object.fromEntries(plan.periods.map((p) => [p.period_start, p.status]));
+    expect(status["2026-02-01"]).to.equal("ok");
+    expect(status["2026-05-01"]).to.equal("overbilled");
+    expect(plan.totals.diff).to.equal(1500);
+  });
+}
+
+docs {
+  `POST /api/threads/{id}/decisions` with `approve`. The write goes to the sandbox (D5, D25)
+  and the affected plan is recomputed in the same response (D23).
+}

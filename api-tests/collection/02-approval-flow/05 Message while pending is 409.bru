@@ -1,0 +1,26 @@
+meta {
+  name: Message while pending is 409
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "hello"
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.detail: isString
+}
+
+docs {
+  The thread is blocked until the card is decided (`docs/api.md`, status codes).
+}

@@ -43,7 +43,21 @@ make dev               # API on :8000, SPA on :5173, with hot reload
 
 Open http://localhost:5173. A first conversation: set `as_of` to 2026-06-30 in the Settings tab, ask `Check all plans for revenue leakage.`, then `Propose a make-good for February 2026 on PLN-1001`, and approve the card. `make reset` (with the app stopped) clears the sandbox and the conversations.
 
-Other targets: `make check` (lint, type check and tests), `make test`, `make lint`, `make format`, `make types` (regenerate the frontend API types from the OpenAPI schema), `make e2e` (Playwright smoke test of the approval flow against the mock; `make e2e-install` downloads Chromium once), `make smoke-llm` and `make eval-llm` (against the real LLM), `make clean`.
+Other targets: `make check` (lint, type check and tests), `make test`, `make lint`, `make format`, `make types` (regenerate the frontend API types from the OpenAPI schema), `make e2e`, `make api-test`, `make smoke-llm` and `make eval-llm` (against the real LLM), `make clean`.
+
+## Tests
+
+Each layer tests something the others do not. All but the last run without an API key, against fixed data and fixed dates.
+
+| Layer | Tool | What it checks | Command |
+|---|---|---|---|
+| Domain and contract | pytest | The detector against the ground-truth table in `docs/design.md`, the sandbox, the graph with a scripted LLM, and the API in process (`TestClient`) | `make test` |
+| Frontend | Vitest | The API client, turn building, markdown, cards and the app in jsdom | `make test` |
+| API, black box | [Bruno](https://www.usebruno.com/) | 51 requests over real HTTP against a fresh mock server: the approval flow chained through variables, every 404 / 409 / 422, the rollback guard, settings versioning | `make api-test` |
+| End to end | Playwright | The approval flow in the real UI, through the Vite proxy | `make e2e` (`make e2e-install` once) |
+| Real LLM | pytest (`-m llm`) | Tool-calling structure against the live model, never its wording | `make eval-llm` |
+
+The Bruno collection in [api-tests/collection/](api-tests/collection/) is plain text, one `.bru` file per request, each with a `docs` block naming the design decision it checks. To explore it, open that folder in the Bruno app, run `make dev AGENT_BACKEND=mock` and pick the `local` environment. CI runs pytest and Vitest in `check`, plus separate `api-test` and `e2e` jobs. The `api-test` job uploads the HTML report as an artifact.
 
 Configuration lives in the root `.env`: `LLM_MODEL`, `LLM_BASE_URL`, `LLM_API_KEY`, `AGENT_BACKEND` (`real` or `mock`), `STATE_DIR` (default `.state/`) and `DATA_DIR` (default `data/`). `GET /api/health` reports which backend is running.
 
@@ -56,6 +70,7 @@ backend/   FastAPI (uv, Python 3.12)
   app/mock.py     scripted service with the same contract
   app/schemas.py  API contract (Pydantic)
 frontend/  React + Vite + TypeScript + Tailwind v4: chat with cards, side panel with plans, settings and audit log
+api-tests/ Bruno collection: black-box tests of the HTTP API against the mock
 data/      read-only input: billing plans, invoices, credit memos, exchange rates
 docs/      design decisions, API contract, data analysis, agent know-how
 ```

@@ -1,0 +1,23 @@
+meta {
+  name: Create thread
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/threads
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+vars:post-response {
+  threadId: res.body.thread_id
+}
+
+script:post-response {
+  bru.setVar("activeBefore", res.body.state.actions.filter((a) => a.rolled_back_at === null).length);
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Create thread
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/threads
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.thread_id: isString
+  res.body.events: isEmpty
+  res.body.state.pending_approval: isNull
+  res.body.state.active_plan_id: isNull
+}
+
+vars:post-response {
+  threadId: res.body.thread_id
+}
+
+script:post-response {
+  // The audit log is global (D5): remember how many actions exist before this flow.
+  bru.setVar("actionsBefore", res.body.state.actions.length);
+}
+
+docs {
+  The server creates the thread (D9) and returns it empty. `threadId` feeds every later request.
+}

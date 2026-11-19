@@ -310,9 +310,13 @@ def test_settings_roundtrip_bumps_version_and_makes_findings_stale(client: TestC
     assert state["settings_version"] == 2
     assert state["findings"][0]["stale"] is True
 
+    # The same value again is not a change (D36): the version stays.
+    assert client.put("/api/settings", json={"period_calendar": "calendar"}).json()["version"] == 2
+
     # null goes back to the default.
     updated = client.put("/api/settings", json={"period_calendar": None}).json()
     assert {s["key"]: s["value"] for s in updated["settings"]}["period_calendar"] is None
+    assert updated["version"] == 3
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,42 @@
+meta {
+  name: Change a setting
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/settings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "period_calendar": "calendar"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  const body = res.getBody();
+  const value = (key) => body.settings.find((s) => s.key === key).value;
+
+  test("version goes up by one", function () {
+    expect(body.version).to.equal(bru.getVar("version") + 1);
+  });
+
+  test("only the field in the body changes", function () {
+    expect(value("period_calendar")).to.equal("calendar");
+    expect(value("auto_renewal")).to.equal(null);
+  });
+
+  // Set after the checks: post-response scripts run before the tests.
+  bru.setVar("version", body.version);
+}
+
+docs {
+  `PUT /api/settings`: only the fields present change.
+}

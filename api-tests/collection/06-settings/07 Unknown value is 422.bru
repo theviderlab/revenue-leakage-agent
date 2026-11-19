@@ -1,0 +1,21 @@
+meta {
+  name: Unknown value is 422
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/settings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "period_calendar": "weekly"
+  }
+}
+
+assert {
+  res.status: eq 422
+}

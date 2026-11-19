@@ -1,0 +1,21 @@
+meta {
+  name: Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq "ok"
+  res.body.agent_backend: eq "mock"
+}
+
+docs {
+  Reports which `AgentService` implementation runs (D35). The collection needs `mock`.
+}

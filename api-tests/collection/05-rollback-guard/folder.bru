@@ -1,0 +1,10 @@
+meta {
+  name: 05 Rollback guard
+  seq: 5
+}
+
+docs {
+  Only the last active action can be rolled back (D8). The flow applies a make-good, asks to
+  roll back another ID (a tool error that names the right one, with no card) and then rolls
+  back the right one, leaving the sandbox as it found it.
+}

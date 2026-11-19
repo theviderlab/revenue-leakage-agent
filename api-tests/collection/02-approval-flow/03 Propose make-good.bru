@@ -1,0 +1,65 @@
+meta {
+  name: Propose make-good
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Propose a make-good invoice for February"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}
+
+script:post-response {
+  const event = res.body.events.find((e) => e.type === "proposal");
+  if (event) bru.setVar("proposalId", event.proposal.proposal_id);
+}
+
+tests {
+  const { events, state } = res.getBody();
+  const call = events.find((e) => e.type === "tool_call");
+  const event = events.find((e) => e.type === "proposal");
+
+  test("the proposal comes with its tool's result, same tool_call_id", function () {
+    expect(call.name).to.equal("propose_make_good_invoice");
+    expect(event.tool_call_id).to.equal(call.tool_call_id);
+    const result = events.find((e) => e.type === "tool_result");
+    expect(result.tool_call_id).to.equal(call.tool_call_id);
+  });
+
+  test("it recovers one monthly amount for an explicit period", function () {
+    expect(event.proposal.proposal_id).to.equal("PRP-001");
+    expect(event.proposal.type).to.equal("make_good_invoice");
+    expect(event.proposal.args).to.eql({
+      plan_id: "PLN-1001",
+      period_start: "2026-02-01",
+      amount: 7000,
+    });
+  });
+
+  test("it carries evidence and a reason, and starts pending", function () {
+    expect(event.proposal.evidence).to.be.an("array").that.is.not.empty;
+    expect(event.proposal.reason).to.be.a("string").that.is.not.empty;
+    expect(state.proposals.map((p) => p.status)).to.eql(["pending"]);
+  });
+
+  test("proposing writes nothing", function () {
+    expect(state.actions).to.have.length(bru.getVar("actionsBefore"));
+  });
+}
+
+docs {
+  A proposal only on request, validated against the detector (D17, D7: one make-good per
+  missing period, with an explicit `period_start`).
+}

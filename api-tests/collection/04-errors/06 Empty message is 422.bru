@@ -1,0 +1,28 @@
+meta {
+  name: Empty message is 422
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": ""
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.detail: isArray
+}
+
+tests {
+  test("FastAPI names the invalid field", function () {
+    expect(res.body.detail[0].loc).to.eql(["body", "text"]);
+  });
+}

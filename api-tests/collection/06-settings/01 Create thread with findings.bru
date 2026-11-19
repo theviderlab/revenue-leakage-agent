@@ -1,0 +1,20 @@
+meta {
+  name: Create thread with findings
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/threads
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+vars:post-response {
+  threadId: res.body.thread_id
+  version: res.body.state.settings_version
+}

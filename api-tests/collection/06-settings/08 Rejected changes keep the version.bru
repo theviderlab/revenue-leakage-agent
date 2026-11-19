@@ -1,0 +1,16 @@
+meta {
+  name: Rejected changes keep the version
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/settings
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.version: eq {{version}}
+}

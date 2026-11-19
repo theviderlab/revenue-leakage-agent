@@ -1,0 +1,69 @@
+meta {
+  name: Investigate plan
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Check plan PLN-1001 for revenue leakage"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.active_plan_id: eq "PLN-1001"
+  res.body.state.pending_approval: isNull
+}
+
+tests {
+  const { events, state } = res.getBody();
+
+  test("the turn is user message, detector call, its result, findings and the answer", function () {
+    expect(events.map((e) => e.type)).to.eql([
+      "user_message",
+      "tool_call",
+      "tool_result",
+      "findings",
+      "assistant_message",
+    ]);
+  });
+
+  test("the detector is called as a tool and its result pairs by tool_call_id", function () {
+    const call = events.find((e) => e.type === "tool_call");
+    const result = events.find((e) => e.type === "tool_result");
+    expect(call.name).to.equal("detect_anomalies");
+    expect(result.tool_call_id).to.equal(call.tool_call_id);
+    expect(result.status).to.equal("ok");
+  });
+
+  const plan = events.find((e) => e.type === "findings").findings.plans[0];
+
+  test("totals match the ground truth: 49,000 expected, 43,500 net, -5,500", function () {
+    expect(plan.totals).to.eql({ expected: 49000, net: 43500, diff: -5500 });
+    expect(plan.confidence).to.equal("high");
+  });
+
+  test("February 2026 is missing and May 2026 is overbilled", function () {
+    const status = Object.fromEntries(plan.periods.map((p) => [p.period_start, p.status]));
+    expect(status["2026-02-01"]).to.equal("missing");
+    expect(status["2026-05-01"]).to.equal("overbilled");
+    expect(plan.periods.filter((p) => p.status === "missing")).to.have.length(1);
+  });
+
+  test("the findings are stored in the thread state, not stale", function () {
+    expect(state.findings).to.have.length(1);
+    expect(state.findings[0].stale).to.equal(false);
+  });
+}
+
+docs {
+  `POST /api/threads/{id}/messages`. The deterministic detector computes; the agent only
+  explains (D19). The client renders the `findings` event, it never recomputes totals.
+}

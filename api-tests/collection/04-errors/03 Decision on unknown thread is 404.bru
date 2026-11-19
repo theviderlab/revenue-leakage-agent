@@ -1,0 +1,22 @@
+meta {
+  name: Decision on unknown thread is 404
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/threads/does-not-exist/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "x",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 404
+}

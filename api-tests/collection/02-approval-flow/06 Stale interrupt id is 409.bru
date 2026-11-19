@@ -1,0 +1,27 @@
+meta {
+  name: Stale interrupt id is 409
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "stale-card",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+docs {
+  An old or forged card approves nothing (D10). The next request checks that the real card is
+  still pending.
+}

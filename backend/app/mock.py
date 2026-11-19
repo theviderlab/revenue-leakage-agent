@@ -213,7 +213,10 @@ class MockService:
                 raise Conflict("There is a pending action; decide it before changing settings")
             if update.as_of is not None and update.as_of > date.today():
                 raise InvalidSettings("as_of cannot be later than today")
-            changed = update.model_fields_set
+            # Like the real backend (D36): a PUT with no real change does not bump the version.
+            changed = {
+                key for key in update.model_fields_set if self._values[key] != getattr(update, key)
+            }
             for key in changed:
                 self._values[key] = getattr(update, key)
             if changed:

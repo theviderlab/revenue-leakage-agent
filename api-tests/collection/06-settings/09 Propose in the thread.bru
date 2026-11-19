@@ -1,0 +1,22 @@
+meta {
+  name: Propose in the thread
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Propose a make-good invoice for February"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.proposals.length: eq 1
+}

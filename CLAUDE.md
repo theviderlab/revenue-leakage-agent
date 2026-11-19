@@ -15,6 +15,7 @@ backend/             FastAPI app (uv project, Python 3.12)
 frontend/            React SPA (Vite + React + TypeScript, Tailwind v4, Vitest)
   src/               application code
   src/lib/           API client (api.ts) and generated API types (api-types.ts)
+api-tests/           Bruno black-box API tests (D40): collection/ (.bru files), run.mjs (starts the mock)
 docs/                design decisions (see Docs)
 .github/workflows/   CI (runs make install + make check)
 ```
@@ -29,6 +30,7 @@ docs/                design decisions (see Docs)
 - `make format` - ruff format + ruff check --fix
 - `make check` - lint + test
 - `make e2e` - Playwright smoke test against the mock (own ports 8100 / 5180; `make e2e-install` once for Chromium); a separate CI job, not part of `check`
+- `make api-test` - Bruno collection over HTTP against its own mock backend (port 8200), reports in `api-tests/reports/`; a separate CI job, not part of `check`
 - `make types` - generate `frontend/src/lib/api-types.ts` from the backend OpenAPI schema
 - `make reset` - delete the runtime state (`STATE_DIR`, default `.state/`); stop the app first
 - `make smoke-llm` - tool-calling round trip against the real LLM (needs `LLM_API_KEY` in `.env`)

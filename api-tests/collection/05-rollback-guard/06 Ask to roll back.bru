@@ -1,0 +1,26 @@
+meta {
+  name: Ask to roll back
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Roll back {{actionId}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval.action.action_id: eq {{actionId}}
+}
+
+vars:post-response {
+  interruptId: res.body.state.pending_approval.interrupt_id
+}

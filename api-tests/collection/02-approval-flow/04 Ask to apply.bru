@@ -1,0 +1,55 @@
+meta {
+  name: Ask to apply
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Yes, apply it"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: neq null
+}
+
+script:post-response {
+  const card = res.body.events.find((e) => e.type === "approval_request");
+  if (card) {
+    bru.setVar("interruptId", card.interrupt_id);
+    bru.setVar("toolCallId", card.tool_call_id);
+  }
+}
+
+tests {
+  const { events, state } = res.getBody();
+  const card = events.find((e) => e.type === "approval_request");
+
+  test("the turn ends in an approval card, not in a write", function () {
+    expect(events[events.length - 1].type).to.equal("approval_request");
+    expect(card.action.kind).to.equal("apply");
+    expect(card.action.action_id).to.equal(null);
+    expect(card.action.proposal.proposal_id).to.equal(bru.getVar("proposalId"));
+  });
+
+  test("the card and state.pending_approval are the same pending action", function () {
+    expect(state.pending_approval.interrupt_id).to.equal(card.interrupt_id);
+    expect(state.pending_approval.action).to.eql(card.action);
+  });
+
+  test("a typed 'yes' is not an approval: nothing is written yet", function () {
+    expect(state.actions).to.have.length(bru.getVar("actionsBefore"));
+  });
+}
+
+docs {
+  Every write stops at a card (D1). The `interrupt_id` is what the decision has to quote (D10).
+}

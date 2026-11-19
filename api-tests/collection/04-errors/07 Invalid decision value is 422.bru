@@ -1,0 +1,26 @@
+meta {
+  name: Invalid decision value is 422
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "int-1",
+    "decision": "maybe"
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+docs {
+  Only `approve` or `reject`: validation runs before the 409 check.
+}

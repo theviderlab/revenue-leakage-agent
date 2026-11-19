@@ -1,0 +1,26 @@
+meta {
+  name: Open a card
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "apply"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: neq null
+}
+
+vars:post-response {
+  interruptId: res.body.state.pending_approval.interrupt_id
+}

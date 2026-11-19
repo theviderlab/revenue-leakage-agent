@@ -1,0 +1,35 @@
+meta {
+  name: Approve apply
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  const result = res.body.events.find((e) => e.type === "tool_result" && e.name === "apply");
+  if (result && result.result) bru.setVar("actionId", result.result.action_id);
+}
+
+tests {
+  test("a new ID is issued: IDs are sequential and never reused", function () {
+    const ids = res.body.state.actions.map((a) => a.action_id);
+    expect(new Set(ids).size).to.equal(ids.length);
+    expect(ids[ids.length - 1]).to.equal(bru.getVar("actionId"));
+  });
+}

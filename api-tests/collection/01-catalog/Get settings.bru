@@ -1,0 +1,45 @@
+meta {
+  name: Get settings
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/settings
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data_through: eq "2026-06-30"
+  res.body.version: gte 1
+}
+
+tests {
+  const settings = res.getBody().settings;
+  const byKey = Object.fromEntries(settings.map((s) => [s.key, s]));
+
+  test("exposes the cutoff and the assumptions the data does not decide", function () {
+    expect(Object.keys(byKey)).to.include.members([
+      "as_of",
+      "data_up_to_date",
+      "period_calendar",
+      "amendment_proration",
+      "auto_renewal",
+    ]);
+  });
+
+  test("every setting starts unset", function () {
+    settings.forEach((s) => expect(s.value, s.key).to.equal(null));
+  });
+
+  test("choice settings list their valid values", function () {
+    expect(byKey.period_calendar.valid_values).to.be.an("array").that.is.not.empty;
+  });
+}
+
+docs {
+  `GET /api/settings` (D24): `version`, `data_through` and each setting with `value`
+  (`null` = not set), `default` and `valid_values`.
+}

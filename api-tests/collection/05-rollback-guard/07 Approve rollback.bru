@@ -1,0 +1,28 @@
+meta {
+  name: Approve rollback
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "approve"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("no action is left active", function () {
+    expect(res.body.state.actions.filter((a) => a.rolled_back_at === null)).to.be.empty;
+  });
+}

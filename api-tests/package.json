@@ -1,0 +1,12 @@
+{
+  "name": "revenue-leakage-agent-api-tests",
+  "description": "Black-box API tests (Bruno) against the mock backend (D40)",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@usebruno/cli": "4.3.0"
+  },
+  "private": true
+}

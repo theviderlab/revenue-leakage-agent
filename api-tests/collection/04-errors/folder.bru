@@ -1,0 +1,10 @@
+meta {
+  name: 04 Errors
+  seq: 4
+}
+
+docs {
+  Status codes of `docs/api.md`: 404 for an unknown thread, 409 when the state does not allow
+  the request, 422 for an invalid body. Agent failures and domain rejections are 200 with an
+  `error` event or an `error` tool result, never a 500.
+}

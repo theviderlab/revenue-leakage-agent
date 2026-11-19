@@ -1,0 +1,14 @@
+docs {
+  # Revenue Leakage Agent API
+
+  Black-box tests of the HTTP API (D40 in `docs/design.md`), run over real HTTP against the
+  scripted mock backend (`AGENT_BACKEND=mock`, D29). The contract is in `docs/api.md`.
+
+  Run them with `make api-test` (starts a fresh mock on port 8200, environment `ci`). To explore
+  by hand in the Bruno app, start `make dev AGENT_BACKEND=mock` and pick the `local` environment.
+
+  The folders run in order and share the server: the mock keeps the audit log in memory, so
+  every flow that applies an action rolls it back before it ends, and the settings folder
+  restores the defaults. IDs that depend on the server's history (`INV-MG-NNN`, the settings
+  `version`) are captured into variables and compared, never hard-coded.
+}

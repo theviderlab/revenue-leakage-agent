@@ -1,0 +1,46 @@
+meta {
+  name: Reject
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/decisions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "interrupt_id": "{{interruptId}}",
+    "decision": "reject"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+}
+
+tests {
+  const { events, state } = res.getBody();
+
+  test("the original call gets a rejected_by_user result", function () {
+    const result = events.find((e) => e.type === "tool_result");
+    expect(result.tool_call_id).to.equal(bru.getVar("toolCallId"));
+    expect(result.status).to.equal("rejected_by_user");
+  });
+
+  test("nothing is written", function () {
+    const active = state.actions.filter((a) => a.rolled_back_at === null);
+    expect(active).to.have.length(bru.getVar("activeBefore"));
+  });
+
+  test("the proposal becomes rejected", function () {
+    expect(state.proposals.map((p) => p.status)).to.eql(["rejected"]);
+  });
+}
+
+docs {
+  `reject`: no write, the proposal is closed (D34) and the agent answers.
+}

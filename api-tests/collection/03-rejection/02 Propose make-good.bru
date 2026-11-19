@@ -1,0 +1,28 @@
+meta {
+  name: Propose make-good
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Propose a make-good invoice for 2026-02"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("the period was rolled back in the previous flow, so it can be proposed again", function () {
+    const event = res.body.events.find((e) => e.type === "proposal");
+    expect(event.proposal.args.period_start).to.equal("2026-02-01");
+  });
+}

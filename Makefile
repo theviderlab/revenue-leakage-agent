@@ -23,6 +23,7 @@ help:
 	@echo   check         lint and test
 	@echo   e2e           Playwright smoke test against the mock, run e2e-install once first
 	@echo   e2e-install   download the Chromium build Playwright uses
+	@echo   api-test      Bruno black-box API tests against a fresh mock backend
 	@echo   types         generate TS types from the OpenAPI schema
 	@echo   smoke-llm     tool-calling round trip against the real LLM, needs LLM_API_KEY
 	@echo   eval-llm      tests marked llm, against the real LLM
@@ -32,6 +33,7 @@ help:
 install:
 	uv --directory backend sync
 	npm --prefix frontend install
+	npm --prefix api-tests install
 
 dev:
 	npx --yes concurrently -k -n api,web "uv --directory backend run uvicorn app.main:app --reload --port $(BACKEND_PORT)" "npm --prefix frontend run dev"
@@ -67,6 +69,13 @@ e2e:
 
 e2e-install:
 	npm --prefix frontend exec -- playwright install chromium
+
+# Black-box API tests (D40): api-tests/run.mjs starts its own mock backend on port 8200, runs
+# the Bruno collection over HTTP and writes api-tests/reports/. Not part of check either.
+.PHONY: api-test
+
+api-test:
+	npm --prefix api-tests test
 
 types:
 	uv --directory backend run python -c "import json; from app.main import app; open('../frontend/openapi.json', 'w').write(json.dumps(app.openapi()))"

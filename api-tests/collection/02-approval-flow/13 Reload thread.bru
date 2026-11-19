@@ -1,0 +1,43 @@
+meta {
+  name: Reload thread
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/threads/{{threadId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: isNull
+  res.body.state.active_plan_id: eq "PLN-1001"
+}
+
+tests {
+  const { events } = res.getBody();
+
+  test("the whole history comes back, from the first message", function () {
+    expect(events[0]).to.eql({
+      type: "user_message",
+      text: "Check plan PLN-1001 for revenue leakage",
+    });
+  });
+
+  test("both cards are in the history, so the UI can render them as decided", function () {
+    const kinds = events.filter((e) => e.type === "approval_request").map((e) => e.action.kind);
+    expect(kinds).to.eql(["apply", "rollback"]);
+  });
+
+  test("the rejected 409 message left no trace", function () {
+    const texts = events.filter((e) => e.type === "user_message").map((e) => e.text);
+    expect(texts).to.not.include("hello");
+  });
+}
+
+docs {
+  `GET /api/threads/{id}`: what a page reload sees (D18). It has to match what the turns
+  returned.
+}

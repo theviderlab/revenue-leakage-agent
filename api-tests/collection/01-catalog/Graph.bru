@@ -1,0 +1,22 @@
+meta {
+  name: Graph
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/graph
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.headers["content-type"]: contains "text/plain"
+  res.body: contains "human_review"
+}
+
+docs {
+  `GET /api/graph`: the LangGraph graph as Mermaid text. The approval node `human_review`
+  (D1) has to be there.
+}

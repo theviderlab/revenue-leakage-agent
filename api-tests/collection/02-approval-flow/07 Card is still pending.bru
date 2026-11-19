@@ -1,0 +1,22 @@
+meta {
+  name: Card is still pending
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/threads/{{threadId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval.interrupt_id: eq {{interruptId}}
+}
+
+tests {
+  test("the rejected 409 did not touch the audit log", function () {
+    expect(res.body.state.actions).to.have.length(bru.getVar("actionsBefore"));
+  });
+}

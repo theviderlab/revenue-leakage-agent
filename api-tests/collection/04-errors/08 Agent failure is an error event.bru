@@ -1,0 +1,33 @@
+meta {
+  name: Agent failure is an error event
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "simulate an error"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("an LLM failure is a 200 with an error event, not a 500", function () {
+    const events = res.getBody().events;
+    expect(events.map((e) => e.type)).to.eql(["user_message", "error"]);
+    expect(events[1].message).to.be.a("string").that.is.not.empty;
+  });
+}
+
+docs {
+  The mock simulates the LLM being down. The thread stays usable afterwards.
+}

@@ -1,0 +1,50 @@
+meta {
+  name: Ask to roll back
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Roll it back"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.pending_approval: neq null
+}
+
+script:post-response {
+  const card = res.body.events.find((e) => e.type === "approval_request");
+  if (card) {
+    bru.setVar("interruptId", card.interrupt_id);
+    bru.setVar("toolCallId", card.tool_call_id);
+  }
+}
+
+tests {
+  const card = res.body.events.find((e) => e.type === "approval_request");
+
+  test("a rollback goes through the same kind of card", function () {
+    expect(card.action.kind).to.equal("rollback");
+    expect(card.action.action_id).to.equal(bru.getVar("actionId"));
+    expect(card.action.proposal).to.equal(null);
+  });
+
+  test("the action stays active until the card is approved", function () {
+    const action = res.body.state.actions.find((a) => a.action_id === bru.getVar("actionId"));
+    expect(action.rolled_back_at).to.equal(null);
+  });
+}
+
+docs {
+  Rollback by ID, only of the last active action (D8), with the same pending action shape as
+  `apply` (`docs/api.md`, Pending action).
+}

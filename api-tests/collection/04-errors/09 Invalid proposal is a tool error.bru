@@ -1,0 +1,40 @@
+meta {
+  name: Invalid proposal is a tool error
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/threads/{{threadId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "text": "Propose a make-good invoice for March"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state.proposals: isEmpty
+}
+
+tests {
+  test("March was billed: the domain rejects it as an error tool result", function () {
+    const result = res.body.events.find((e) => e.type === "tool_result");
+    expect(result.name).to.equal("propose_make_good_invoice");
+    expect(result.status).to.equal("error");
+    expect(result.result.error).to.include("not a missing period");
+  });
+
+  test("no proposal event is emitted", function () {
+    expect(res.body.events.map((e) => e.type)).to.not.include("proposal");
+  });
+}
+
+docs {
+  Proposals are validated against the detector before they are shown (D17): the agent cannot
+  propose a make-good for a period that is not missing.
+}
