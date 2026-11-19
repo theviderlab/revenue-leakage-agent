@@ -15,10 +15,10 @@ Related documents:
 | Layer | Choice |
 |---|---|
 | Backend | FastAPI, Python 3.12 with uv, ruff, pytest |
-| Frontend | Vite + React + TypeScript, Tailwind v4, Vitest |
+| Frontend | Vite + React + TypeScript, Tailwind v4, Vitest, Playwright (one e2e test, D39) |
 | Agent | LangGraph, OpenAI-compatible LLM through `get_llm()` (see [agent.md](agent.md)) |
 | Commands | Makefile (GNU make) |
-| CI | GitHub Actions (`make install` + `make check`) |
+| CI | GitHub Actions: `check` job (`make install` + `make check`) and `e2e` job (`make e2e`, D39) |
 
 ---
 
@@ -505,6 +505,19 @@ Rejected:
 
 - **Hardening the prompt for these minor observations** (new rules to force the language, hide finding keys, not chain `propose_*` and `apply`, and require the tool on an out-of-order rollback): no case writes without the card; the imperative request is equivalent to asking to apply, and more rules risk regressions.
 
+### D39. One end-to-end smoke test: Playwright against the mock, in its own CI job
+
+A single Playwright test (`frontend/e2e/approval-flow.e2e.ts`, Chromium only) walks the mock's scripted flow (D29) in the real UI: investigate PLN-1001 (-5,500), propose the February make-good, apply, check that the audit log is still empty before Approve, approve (`INV-MG-001`, +1,500), roll back and approve (-5,500). Playwright starts its own backend (`AGENT_BACKEND=mock`, `STATE_DIR` in the OS temp dir) and Vite dev server on ports 8100 / 5180, never reusing a running server. It runs with `make e2e` (`make e2e-install` downloads Chromium once) and in a separate `e2e` job of the CI, which uploads the report and trace when it fails; it is not part of `make check`.
+
+Why: pytest and Vitest test each side alone; nothing else checks them together (the `/api` proxy, the cards wired to `state`, the approval round trip, totals shown from the API). The mock is deterministic and uses the ground-truth numbers, so one test covers the main flow with no LLM and no flakiness from model text.
+
+Rejected:
+
+- **E2E against the real LLM**: not deterministic, costs money and needs a secret in CI; `make eval-llm` already covers the real LLM at the structure level.
+- **Several browsers or many scenarios**: maintenance and CI time with no gain at this size; edge cases belong in the Vitest and pytest tests.
+- **Inside `make check`**: it needs a browser download (about 300 MB) and two servers, which slows the local loop for every change.
+- **Against a production build (`vite preview`)**: the dev server is what the proxy config and `make dev` use; a build step adds time and tests nothing extra here.
+
 ---
 
 ## Detector ground truth
@@ -652,3 +665,6 @@ Detector:
 - DOM tests: `// @vitest-environment jsdom` per file and an explicit `cleanup()` in `afterEach`.
 - Desktop layout (`App.tsx`): `main` needs `min-w-0` and `aside` needs `shrink-0`. Without them a flex item's `min-width: auto` keeps `main` at the findings table's min-content width, the side panel shrinks from `w-96` to half and the page gets a horizontal scroll (the table's `overflow-x-auto` never kicks in).
 - A hung `PUT /api/settings` shows no error in the UI (the button stays on "saving" with no limit): the client has no timeout.
+- Playwright files are `*.e2e.ts`, not `*.spec.ts`: Vitest's default include also matches `.spec.ts` and would try to run them. They are type checked through `tsconfig.node.json`.
+- In the e2e test, `getByText('PRP-001')` first matches the collapsed JSON of the trace (hidden): scope locators to a card's `data-testid`.
+- The mock keeps the audit log in memory per process, so the e2e test expects `INV-MG-001` only on a fresh server: `reuseExistingServer: false`, `retries: 0` and its own ports (8100 / 5180).

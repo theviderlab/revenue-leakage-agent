@@ -21,6 +21,8 @@ help:
 	@echo   lint          ruff, type check and oxlint
 	@echo   format        format and autofix backend code
 	@echo   check         lint and test
+	@echo   e2e           Playwright smoke test against the mock, run e2e-install once first
+	@echo   e2e-install   download the Chromium build Playwright uses
 	@echo   types         generate TS types from the OpenAPI schema
 	@echo   smoke-llm     tool-calling round trip against the real LLM, needs LLM_API_KEY
 	@echo   eval-llm      tests marked llm, against the real LLM
@@ -55,6 +57,16 @@ format:
 	uv --directory backend run ruff check --fix .
 
 check: lint test
+
+# End-to-end smoke test (D39): starts its own backend (mock) and frontend on ports 8100 / 5180.
+# Not part of check: it needs a browser download and two servers.
+.PHONY: e2e e2e-install
+
+e2e:
+	npm --prefix frontend run e2e
+
+e2e-install:
+	npm --prefix frontend exec -- playwright install chromium
 
 types:
 	uv --directory backend run python -c "import json; from app.main import app; open('../frontend/openapi.json', 'w').write(json.dumps(app.openapi()))"

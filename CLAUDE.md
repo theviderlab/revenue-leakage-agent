@@ -28,6 +28,7 @@ docs/                design decisions (see Docs)
 - `make lint` - ruff check, ruff format --check, tsc -b, oxlint
 - `make format` - ruff format + ruff check --fix
 - `make check` - lint + test
+- `make e2e` - Playwright smoke test against the mock (own ports 8100 / 5180; `make e2e-install` once for Chromium); a separate CI job, not part of `check`
 - `make types` - generate `frontend/src/lib/api-types.ts` from the backend OpenAPI schema
 - `make reset` - delete the runtime state (`STATE_DIR`, default `.state/`); stop the app first
 - `make smoke-llm` - tool-calling round trip against the real LLM (needs `LLM_API_KEY` in `.env`)

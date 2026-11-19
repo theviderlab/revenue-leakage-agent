@@ -43,7 +43,7 @@ make dev               # API on :8000, SPA on :5173, with hot reload
 
 Open http://localhost:5173. A first conversation: set `as_of` to 2026-06-30 in the Settings tab, ask `Check all plans for revenue leakage.`, then `Propose a make-good for February 2026 on PLN-1001`, and approve the card. `make reset` (with the app stopped) clears the sandbox and the conversations.
 
-Other targets: `make check` (lint, type check and tests), `make test`, `make lint`, `make format`, `make types` (regenerate the frontend API types from the OpenAPI schema), `make smoke-llm` and `make eval-llm` (against the real LLM), `make clean`.
+Other targets: `make check` (lint, type check and tests), `make test`, `make lint`, `make format`, `make types` (regenerate the frontend API types from the OpenAPI schema), `make e2e` (Playwright smoke test of the approval flow against the mock; `make e2e-install` downloads Chromium once), `make smoke-llm` and `make eval-llm` (against the real LLM), `make clean`.
 
 Configuration lives in the root `.env`: `LLM_MODEL`, `LLM_BASE_URL`, `LLM_API_KEY`, `AGENT_BACKEND` (`real` or `mock`), `STATE_DIR` (default `.state/`) and `DATA_DIR` (default `data/`). `GET /api/health` reports which backend is running.
 
