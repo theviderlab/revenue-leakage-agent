@@ -90,18 +90,6 @@ The expected detector results for the base case (291,728.26 expected, 227,500.00
 - Configuration and error paths have less test coverage than the detector and the approval flow.
 - The sandbox is a set of local JSON ledgers, not an integration with a billing system.
 
-## How it was built
-
-The first working version was built in a 90-minute sprint with [Claude Code](https://claude.com/claude-code): 17 sessions, up to 9 of them running in parallel, each one owning a separate area of the code.
-
-What made the parallel work hold together:
-
-- **Docs as the single source of truth.** Every decision was written in `docs/` before the code, as a numbered `D#` with the alternatives it rejected. Sessions read the docs instead of each other's conversations, and [CLAUDE.md](CLAUDE.md) points every new session to them.
-- **API contract first.** The Pydantic models and [docs/api.md](docs/api.md) were written before either side. The frontend generates its types from the OpenAPI schema (`make types`) and never writes them by hand.
-- **A mock backend to decouple both sides.** The scripted mock implements the same contract, so the frontend was built and tested before the real agent existed. A test keeps the mock's totals in sync with the detector.
-- **Expected results as a table.** The detector's ground truth was written as a table in the design doc before the tests, and the tests assert against it.
-- **Hermetic tests.** Graph tests run against a scripted fake LLM; tests that call the real model are marked `llm`, run only with `make eval-llm`, and assert structure, never text.
-
 ## License
 
 [MIT](LICENSE)

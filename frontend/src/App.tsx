@@ -47,7 +47,7 @@ function App() {
         <h1 className="text-lg font-semibold">Revenue Leakage Agent</h1>
       </header>
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <main className="flex min-h-0 flex-1 flex-col">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
           <Chat
             chat={chat}
             plans={plans ?? []}
@@ -56,7 +56,7 @@ function App() {
             focusSignal={focusSignal}
           />
         </main>
-        <aside className="flex max-h-[45vh] min-h-0 flex-col border-t border-slate-200 bg-white md:max-h-none md:w-96 md:border-l md:border-t-0">
+        <aside className="flex max-h-[45vh] min-h-0 shrink-0 flex-col border-t border-slate-200 bg-white md:max-h-none md:w-96 md:border-l md:border-t-0">
           <div role="tablist" className="flex border-b border-slate-200">
             {TABS.map((t) => (
               <button

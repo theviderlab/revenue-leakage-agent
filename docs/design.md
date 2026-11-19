@@ -650,4 +650,5 @@ Detector:
 - `listPlans()` shares the in-flight request, and the refresh key is `''` while the thread loads: without that, StrictMode and the `state` change requested `/api/plans` three times.
 - Vite listens on `localhost` (it can be `::1`): use `http://localhost:<port>`, not `127.0.0.1`.
 - DOM tests: `// @vitest-environment jsdom` per file and an explicit `cleanup()` in `afterEach`.
+- Desktop layout (`App.tsx`): `main` needs `min-w-0` and `aside` needs `shrink-0`. Without them a flex item's `min-width: auto` keeps `main` at the findings table's min-content width, the side panel shrinks from `w-96` to half and the page gets a horizontal scroll (the table's `overflow-x-auto` never kicks in).
 - A hung `PUT /api/settings` shows no error in the UI (the button stays on "saving" with no limit): the client has no timeout.
